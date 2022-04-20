@@ -190,6 +190,12 @@
 			"HeaderUnit"
 		}
 	}
+ 
+	api.register {
+		name = "allmodulespublic",
+		scope = "config",
+		kind = "boolean"
+	}
 
 	api.register {
 		name = "configmap",
@@ -636,6 +642,12 @@
 		scope = "config",
 		kind = "list:mixed",
 		tokens = true,
+	}
+
+	api.register {
+		name = "inheritdependencies",
+		scope = "config",
+		kind = "boolean",
 	}
 
 	api.register {

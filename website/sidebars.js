@@ -60,6 +60,7 @@ module.exports = {
 					type: 'category',
 					label: 'Project Settings',
 					items: [
+						'allmodulespublic',
 						'androidapilevel',
 						'androidapplibname',
 						'architecture',
@@ -178,6 +179,7 @@ module.exports = {
 						'implibsuffix',
 						'importdirs',
 						'includedirs',
+						'inheritdependencies',
 						'inlinesvisibility',
 						'inlining',
 						'intrinsics',
@@ -232,6 +234,7 @@ module.exports = {
 						'rules',
 						'runpathdirs',
 						'runtime',
+						'scanformoduledependencies',
 						'shaderassembler',
 						'shaderassembleroutput',
 						'shaderdefines',

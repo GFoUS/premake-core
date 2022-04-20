@@ -243,6 +243,7 @@
 				m.generateManifest,
 				m.extensionsToDeleteOnClean,
 				m.executablePath,
+				m.allModulesPublic,
 			}
 		end
 	end
@@ -397,6 +398,7 @@
 			m.compileAsWinRT,
 			m.externalWarningLevel,
 			m.externalAngleBrackets,
+			m.scanSourceForModuleDependencies,
 		}
 
 		if cfg.kind == p.STATICLIB then
@@ -795,7 +797,7 @@
 ---
 	m.categories.ClCompile = {
 		name       = "ClCompile",
-		extensions = { ".cc", ".cpp", ".cxx", ".c++", ".c", ".s", ".m", ".mm" },
+		extensions = { ".cc", ".cpp", ".cxx", ".c++", ".c", ".s", ".m", ".mm", ".cppm", ".ixx" },
 		priority   = 2,
 
 		emitFiles = function(prj, group)
@@ -820,7 +822,7 @@
 						m.runtimeTypeInfo,
 						m.warningLevelFile,
 						m.compileAsWinRT,
-						m.externalWarningLevel,
+						m.externalWarningLevelFile,
 						m.externalAngleBrackets,
 					}
 				else
@@ -1420,9 +1422,18 @@
 			links = vstudio.getLinks(cfg, explicit)
 		end
 
-		if #links > 0 then
-			links = path.translate(table.concat(links, ";"))
-			m.element("AdditionalDependencies", nil, "%s;%%(AdditionalDependencies)", links)
+		links = path.translate(table.concat(links, ";"))
+
+		local additional = ";%(AdditionalDependencies)"
+		if cfg.inheritdependencies ~= nil then
+			if not cfg.inheritdependencies then
+				additional = ""
+			end
+		end
+
+		-- If there are no links and dependencies should be inherited, the tag doesn't have to be generated.
+		if #links > 0 or additional == "" then
+			m.element("AdditionalDependencies", nil, "%s%s", links, additional)
 		end
 	end
 
@@ -1506,11 +1517,15 @@
 	function m.conformanceMode(cfg)
 		if _ACTION >= "vs2017" then
 			if cfg.conformancemode ~= nil then
-				if cfg.conformancemode then
-					m.element("ConformanceMode", nil, "true")
-				else
-					m.element("ConformanceMode", nil, "false")
-				end
+				m.element("ConformanceMode", nil, iif(cfg.conformancemode, "true", "false"))
+			end
+		end
+	end
+
+	function m.allModulesPublic(cfg)
+		if _ACTION >= "vs2019" then
+			if cfg.allmodulespublic ~= nil then
+				m.element("AllProjectBMIsArePublic", nil, iif(cfg.allmodulespublic, "true", "false"))
 			end
 		end
 	end
@@ -2862,12 +2877,35 @@
 	end
 
 
-	function m.externalAngleBrackets(cfg)
+	function m.externalWarningLevelFile(cfg, condition)
+		if _ACTION >= "vs2022" then
+			if cfg.externalwarnings then
+				local map = { Off = "TurnOffAllWarnings", High = "Level4", Extra = "Level4", Everything = "Level4" }
+				m.element("ExternalWarningLevel", condition, map[cfg.externalwarnings] or "Level3")
+			end
+		end
+	end
+
+
+	function m.externalAngleBrackets(cfg, condition)
 		if _ACTION >= "vs2022" then
 			if cfg.externalanglebrackets == p.OFF then
 				m.element("TreatAngleIncludeAsExternal", condition, "false")
 			elseif cfg.externalanglebrackets == p.ON then
 				m.element("TreatAngleIncludeAsExternal", condition, "true")
+			end
+		end
+	end
+
+
+	function m.scanSourceForModuleDependencies(cfg)
+		if _ACTION >= "vs2019" then
+			if cfg.scanformoduledependencies ~= nil then
+				if cfg.scanformoduledependencies then
+					m.element("ScanSourceForModuleDependencies", nil, "true")
+				else
+					m.element("ScanSourceForModuleDependencies", nil, "false")
+				end
 			end
 		end
 	end
